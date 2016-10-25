@@ -1,5 +1,5 @@
 f:
-cd f:/word/doc/self
+cd f:/word/doc/mydoc
 git add .
-git commit -m "update"
+git commit -m "update" -a
 git push origin master
