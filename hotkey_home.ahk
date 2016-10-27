@@ -1,4 +1,4 @@
-#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
@@ -157,8 +157,8 @@ else
 		run d:/tmp
 	else if (command=="firefox")
 		run D:\firfox\firefox.exe
-	else if (command=="youdao")
-		run C:\Users\yangjb\AppData\Local\Youdao\dict\Application\YodaoDict.exe
+	else if (command=="doc")
+		run G:/doc
 	else if (command=="pwd")
 		send yangjb{tab}yangjb321{raw}!@#
 	else if (command=="c" || command=="d" || command=="e" || command=="f" || command=="g")
@@ -178,7 +178,7 @@ else
 	else if (command=="work")
 		run F:\word\work
 	else if (command="qqfile")
-		run E:\qq接收文档\290600974\FileRecv
+		run D:\QQRecv\290600974\FileRecv
 	else
         run "%command%"
 return
