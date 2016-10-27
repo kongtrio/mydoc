@@ -15,7 +15,7 @@ weixin_path=F:\WeChat\WeChat.exe
 doc_path=F:\word\doc  
 qq_recieve_path=E:\qq接收文档\290600974\FileRecv
 pycharm_path=D:\PyCharm 5.0.4\bin\pycharm.exe
-
+download_path=C:\Users\yangjb\Downloads
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【全局快捷键】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -63,6 +63,8 @@ else																			                             ;;;;;
 		run %xshell_path%
 	else if (command=="maacode")
 		run f:/maa
+	else if (command=="download")
+		run %download_path%
 	else
         run "%command%"
 return
