@@ -1,98 +1,67 @@
-#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
-;chrom path
+;;;;;;;;;;;;;;;;;;;;;;;;;本地一些文件目录;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 chrome_path=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+idea_path=C:\Program Files (x86)\JetBrains\IntelliJ IDEA 2016.1.1\bin\idea.exe
+youdao_path=C:\Program Files (x86)\Youdao\YoudaoNote\YoudaoNote.exe
+youdao_word_path=C:\Users\yangjb\AppData\Local\Youdao\dict\Application\YodaoDict.exe
+xshell_path=C:\Program Files (x86)\NetSarang\Xshell 5\Xshell.exe
+everything_path=C:\Program Files\Everything\Everything.exe
+ahk_help_path=C:\Program Files\AutoHotkey\AutoHotkey.chm
+weixin_path=C:\Program Files (x86)\Tencent\WeChat\WeChat.exe
+doc_path=G:\doc  
+qq_recieve_path=D:\QQRecv\290600974\FileRecv
+pycharm_path=C:\Program Files (x86)\JetBrains\PyCharm 2016.2.3\bin\pycharm.exe
+download_path=D:\下载
 
-;idea path
-idea_path=D:\IntelliJ IDEA 14.1.4\bin\idea.exe
-
-;youdao_path
-youdao_path=D:\YoudaoNote\YoudaoNote.exe
-
-;x_shell path
-xshell_path=D:\Xshell.exe
-
-;everything path
-everything_path=D:\Everything\Everything.exe
-
-;ahk path
-ahk_help_path=C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe
-
-;weixin path
-weixin_path=F:\WeChat\WeChat.exe
-
-#f::
-	ifWinExist,ahk_exe %everything_path%
-		WinMove,11,11
-	else
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【全局快捷键】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											 ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;alt快捷键;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											 ;;;;;
+;;;;;;;;;;弹出一个窗口,打开命令模式																			 ;;;;;
+!c::            																			 				 ;;;;;
+inputBox,command,enter command																			     ;;;;;
+if ErrorLevel																			 					 ;;;;;
+    return																			                         ;;;;;
+else																			                             ;;;;;
+	if (command=="tmp")
+		run d:/tmp
+	else if (command=="firefox")
+		run D:\firfox\firefox.exe
+	else if (command=="doc")
+		run G:/doc
+	else if (command=="pwd")
+		send yangjb{tab}yangjb321{raw}!@#
+	else if (command=="c" || command=="d" || command=="e" || command=="f" || command=="g")
+		run %command%:/
+	else if (command=="yangjb")
+		run C:\Users\yangjb
+	else if (command=="code")
+		run F:\word\code
+	else if (command=="export")
+		run F:\word\export
+	else if (command=="download")
+		run %download_path%
+	else if (command=="si")
+		run F:\word\si
+	else if (command=="war")
+		run F:\word\war
+	else if (command=="work")
+		run F:\word\work
+	else if (command="qqfile")
+		run %qq_recieve_path%
+	else if (command="every")
 		run %everything_path%
-return
-
-;把谷歌浏览器映射成alt+1
-#1::
-	ifWinExist,ahk_exe %chrome_path%
-		winActivate
 	else
-		run %chrome_path%
+        run "%command%"
 return
 
-;把idea映射成alt+2
-#2::
-	ifWinExist,ahk_exe %idea_path%
-		winActivate
-	else
-		run %idea_path%
-return
-
-;开启有道
-#3::
-	ifWinExist,ahk_exe %youdao_path%
-		WinMaximize
-	else
-		run %youdao_path%
-return
-
-;开启xshell
-#4::
-	ifWinExist,ahk_exe %xshell_path%
-		WinMaximize
-	else
-		run %xshell_path%
-return
-
-;open weiin
-#8::
-	ifWinExist,ahk_exe %weixin_path%
-		winActivate
-	else
-		run %weixin_path%
-return
-
-;win+n to open a notepad
-#n::
-	run notepad
-return
-
-;type ahk help to open ahk help
-::ahkhelp::
-	ifWinExist,ahk_exe %ahk_help_path%
-		WinMaximize
-	else
-		run %ahk_help_path% 
-return
-
-#w::
-WinMinimize,A
-return
-
-#q::
-WinRestore,A
-return
-
-;上下左右映射成alt+jkil
+;;;;;;;;;;;上下左右映射成alt+jkil
 !k::
 Send {Up}
 return
@@ -109,7 +78,7 @@ return
 Send {Right}
 return
 
-;映射滚轮上下
+;;;;;;;;;;;;;映射滚轮上下
 !i::
 Send {WheelDown}
 return
@@ -118,80 +87,256 @@ return
 Send {WheelUp}
 return
 
+;;;;;;;;;;;;;删除一整行
+!d::
+Send {Home} 
+Send +{End} 
+Send {delete}
+send {Backspace}
+return 
 
-
-#o::
-if WinExist("ahk_exe chrome.exe")
-	WinActivate, ahk_exe C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
-else
-	Run, C:\Program Files (x86)\Google\Chrome\Application\chrome.exe  
-
-
-::c-calc::
-run calc
+;;;;;;;;;;;;;复制一整行
+!y::
+send {home}
+send +{end}
+send ^c
 return
 
-::c-control::
-run control
+;;;;;;;;;;;;;另起一行粘贴内容																				;;;;;
+!p::																										;;;;;
+send {end}																									;;;;;
+send {enter}																								;;;;;
+send %clipboard%																							;;;;;
+return																										;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;window键快捷键;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											;;;;;
+;;;;;;;;;;;;;最小化当前窗口																					;;;;;
+#w::																								        ;;;;;										
+WinMinimize,A 																								;;;;;
+return																										;;;;;
+
+;;;;;;;;;;;;;;;在谷歌搜索中打开选中的内容
+#q::
+Send ^c 
+sleep,100
+run https://www.google.com/search?q=%clipboard%&oq=%clipboard%&aqs=chrome..69i57j69i61j69i59j0l3.1486j0j1&sourceid=chrome&ie=UTF-8
 return
 
-::pycharm::
-run D:\PyCharm 5.0.4\bin\pycharm.exe
+;;;;;;;;;;;;;;;;;;在百度搜索中打开选中的内容
+#b::
+Send ^c 
+sleep,100
+run https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&rsv_idx=1&tn=92765401_hao_pg&wd=%clipboard%
 return
 
-::wspwd::
-send yangjb{tab}yangjb321{raw}!@#
-send {tab}{tab}
+;;;;;;;;;;;;;;;;;在淘宝中打开选中的内容
+#t::
+Send ^c 
+sleep,100
+run https://s.taobao.com/search?q=%clipboard%
 return
 
-::ftppwd::
-send hdfsftp{tab}20dSp16
+;;;;;;;;;;;;;;;;;;;;;在京东中打开选中的内容
+#j::
+Send ^c 
+sleep,100
+run http://search.jd.com/Search?keyword=%clipboard%&enc=utf-8&wq=%clipboard%&pvid=ckk1trui.xqtaau
 return
 
-!e::
-inputBox,command,enter command
-if ErrorLevel
-    return
-else
-	if (command=="tmp")
-		run d:/tmp
-	else if (command=="firefox")
-		run D:\firfox\firefox.exe
-	else if (command=="youdao")
-		run C:\Users\yangjb\AppData\Local\Youdao\dict\Application\YodaoDict.exe
-	else if (command=="pwd")
-		send yangjb{tab}yangjb321{raw}!@#
-	else if (command=="c" || command=="d" || command=="e" || command=="f" || command=="g")
-		run %command%:/
-	else if (command=="yangjb")
-		run C:\Users\yangjb
-	else if (command=="code")
-		run F:\word\code
-	else if (command=="export")
-		run F:\word\export
-	else if (command=="download")
-		run D:\下载
-	else if (command=="si")
-		run F:\word\si
-	else if (command=="war")
-		run F:\word\war
-	else if (command=="work")
-		run F:\word\work
-	else if (command="qqfile")
-		run E:\qq接收文档\290600974\FileRecv
+;;;;;;;;;;;;;;;;;;;;;;在亚马孙中打开选中的内容
+#a::
+Send ^c 
+sleep,100
+run https://www.amazon.cn/s/ref=nb_sb_noss?field-keywords=%clipboard%
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;在知乎中打开选中的内容
+#z::
+Send ^c 
+sleep,100
+run https://www.zhihu.com/search?type=content&q=%clipboard%
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;在词典网站中打开选中的内容,查找单词的意思
+#c::
+Send ^c 
+sleep,100																									;;;;;
+run http://dict.cn/%clipboard%																				;;;;;
+return																										;;;;;
+																											;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;打开一个记事本																		;;;;;
+#n::																										;;;;;
+	run notepad																								;;;;;
+return																										;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;shift键快捷键;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											;;;;;
+;;;;;;;;;;;;;最小化当前窗口																					;;;;;
++enter::																								    ;;;;;										
+send {end}
+send {enter} 	
+send {home}																									;;;;;
+return																										;;;;;
+																											;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;字符串映射;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											;;;;;
+;;;;;;;;;;;;;打开计算器  																					;;;;;
+::/cal::  																									;;;;;
+	run calc																								;;;;;
+return		  																								;;;;;																									
+;;;;;;;;;;;;;打开autohotkey的api帮助文档
+::/ahk::
+	run %ahk_help_path% 
+return
+
+;;;;;;;;;;;;;打开控制面板
+::/con::
+	run control
+return
+
+;;;;;;;;;;;;;MASP用户密码
+::/mp::
+	send yangjb{tab}yangjb321{raw}!@#
+	send {tab}{tab}
+return
+
+;;;;;;;;;;;;;;dspftp用户密码
+::/dp::
+	send hdfsftp{tab}20dSp16
+return
+	
+::/get::
+WinGetClass, title,A
+msgbox,%title%
+clipboard=%title%
+return
+
+;;;;;;;;;;;;;;;打开任务管理器 
+::/t:: 
+if WinExist Windows 任务管理器 
+WinActivate 
+else 
+Run taskmgr.exe 
+return 
+
+;;;;;;;;;;;;;;;;;
+::/qq::
+WinActivate,拉
+return
+
+;;;;;;;;;;;;;;;;打开系统属性 																				;;;;;
+::/sys:: 																									;;;;;
+Run control sysdm.cpl 																						;;;;;
+return 																										;;;;;
+																											;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;其他组合键映射;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;clrt+shift+c复制文件路径															;;;;;
+^+c::																										;;;;;
+; null= 																									;;;;;
+send ^c 																									;;;;;
+sleep,100
+clipboard=%clipboard% ;%null%
+tooltip,%clipboard%
+sleep,500
+tooltip,
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;开启选择模式向左移动
+!+h::
+send +{left}
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;开启选择模式向右移动
+!+l::
+send +{right}
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;开启选择模式向下移动
+!+j::
+send +{Down}
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;开启选择模式向上移动
+!+k::
+send +{up}
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;迅速打开idea,打开的话激活窗口
+!+i::
+	ifWinExist,ahk_class SunAwtFrame
+		winActivate
 	else
-        run "%command%"
+		run %idea_path%
 return
 
-!q::
-inputBox,key,enter key
-if ErrorLevel
-    return
-else
-    run https://www.google.com/search?q=%key%&oq=%key%&aqs=chrome..69i57j69i61j69i59j0l3.1486j0j1&sourceid=chrome&ie=UTF-8
+;;;;;;;;;;;;;;;;;;;;;;;;;;;迅速打开有道,打开的话激活窗口
+!+y::
+	ifWinExist,ahk_class NeteaseYoudaoYNoteMainWnd
+		winActivate
+	else
+		run %youdao_path%
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;迅速打开chrom,已经打开的话就激活窗口
+!+p::
+	ifWinExist,ahk_exe chrome.exe
+		winActivate
+	else
+		run %chrome_path%
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;迅速打开xshell,已经打开的话就激活窗口
+!+s::
+	ifWinExist,ahk_class Xshell::MainFrame_0
+		winActivate
+	else
+		run %xshell_path%
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;alt+shift+c获取鼠标位置处的颜色取值
+!+c::
+MouseGetPos, mouseX, mouseY
+; 获得鼠标所在坐标，把鼠标的 X 坐标赋值给变量 mouseX ，同理 mouseY
+PixelGetColor, color, %mouseX%, %mouseY%, RGB
+; 调用 PixelGetColor 函数，获得鼠标所在坐标的 RGB 值，并赋值给 color
+StringRight color,color,6
+; 截取 color（第二个 color）右边的6个字符，因为获得的值是这样的：#RRGGBB，一般我们只需要 RRGGBB 部分。把截取到的值再赋给 color（第一个 color）。
+clipboard = %color%
+; 把 color 的值发送到剪贴板
+return																										;;;;;
+																											;;;;;
+																											;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+::ii::
+WinActivate,ahk_class TxGuiFoundationd
 return
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【局部快捷键】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+																											 ;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【Chrome】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#IfWinActive ahk_class Chrome_WidgetWin_1
+!n::Send ^t 
+!x::Send ^w
+!,::Send ^+{Tab} 
+!.::Send ^{Tab} 
+!z::Send ^+t 
+!+h::send ^h
+return 
 
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【Idea】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#IfWinActive ahk_class SunAwtFrame  
+!n::send !{insert}
