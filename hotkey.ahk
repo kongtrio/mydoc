@@ -16,7 +16,7 @@ doc_path=F:\word\doc
 qq_recieve_path=E:\qq接收文档\290600974\FileRecv
 pycharm_path=D:\PyCharm 5.0.4\bin\pycharm.exe
 download_path=C:\Users\yangjb\Downloads
-
+notepad_path=D:\Notepad++\notepad++.exe
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【全局快捷键】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -301,6 +301,14 @@ return
 		run %chrome_path%
 return
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;迅速打开chrom,已经打开的话就激活窗口
+!+n::
+	ifWinExist,ahk_exe NotePad++.exe
+		winActivate
+	else
+		run %notepad_path%
+return
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;迅速打开xshell,已经打开的话就激活窗口
 !+s::
 	ifWinExist,ahk_class Xshell::MainFrame_0
@@ -326,7 +334,10 @@ return																										;;;;;
 
 
 ::ii::
-WinActivate,ahk_class TxGuiFoundationd
+WinActivate,ahk_class TXGuiFoundation
+return
+::jj::
+WinActivate,Chrome
 return
 
 
@@ -348,3 +359,13 @@ return
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【Idea】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #IfWinActive ahk_class SunAwtFrame  
 !n::send !{insert}
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【NotePad++】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#IfWinActive ahk_exe NotePad++.exe
+!n::send ^n
+!x::send ^w
+!+x::send ^+w
+!o::send ^o
+!,::send ^{pgup}
+!.::send ^{pgdn}
