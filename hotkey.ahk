@@ -17,6 +17,7 @@ qq_recieve_path=E:\qq接收文档\290600974\FileRecv
 pycharm_path=D:\PyCharm 5.0.4\bin\pycharm.exe
 download_path=C:\Users\yangjb\Downloads
 notepad_path=D:\Notepad++\notepad++.exe
+wireshark_path=D:\Wireshark\Wireshark.exe
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【全局快捷键】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -41,8 +42,12 @@ else																			                             ;;;;;
 		run %command%:/
 	else if (command=="doc")
 		run %doc_path%
+	else if (command=="doc")
+		run F:\maa_doc
 	else if (command=="code")
 		run F:\word\code
+	else if (command=="hbasetable")
+		run F:\masp\doc\MASP表结构整理.md
 	else if (command=="export")
 		run F:\word\export
 	else if (command=="log")
@@ -65,6 +70,8 @@ else																			                             ;;;;;
 		run f:/maa
 	else if (command=="download")
 		run %download_path%
+	else if (command=="wireshark")
+		run %wireshark_path%
 	else
         run "%command%"
 return
@@ -109,13 +116,7 @@ send {home}
 send +{end}
 send ^c
 return
-
-;;;;;;;;;;;;;另起一行粘贴内容																				;;;;;
-!p::																										;;;;;
-send {end}																									;;;;;
-send {enter}																								;;;;;
-send %clipboard%																							;;;;;
-return																										;;;;;
+																									;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 																											;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;window键快捷键;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -359,6 +360,7 @@ return
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【Idea】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #IfWinActive ahk_class SunAwtFrame  
 !n::send !{insert}
+::/mci::mvn clean install
 return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【NotePad++】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -369,3 +371,23 @@ return
 !o::send ^o
 !,::send ^{pgup}
 !.::send ^{pgdn}
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【QQ】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#IfWinActive ahk_class TXGuiFoundation
+!i::send ^{down}
+!u::send ^{up}
+!x::send ^w
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【typora】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#IfWinActive ahk_exe typora.exe
+::ored::<font color="red"></font>
+return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;【xshell】;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#IfWinActive ahk_exe xshell.exe
+!,::Send ^+{Tab} 
+!.::Send ^{Tab} 
+!x::Send ^+{F4}
+return
