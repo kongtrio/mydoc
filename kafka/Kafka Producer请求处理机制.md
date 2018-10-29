@@ -374,3 +374,5 @@ def append(firstOffset: Long, largestOffset: Long, largestTimestamp: Long, shall
 
 1. logSegment底层使用了fileChannel写日志,写完之后还会判断是否要更新当前logSegment的最大时间戳
 2. 每当写入消息的大小积累到一定程度时，会新插入一条索引记录。这个积累的大小和配置`index.interval.bytes`有关系
+
+kafka底层的写数据是根据fileChannel来写的，它写的时候不会立刻刷盘，而是开启了一个定时任务根据策略去刷盘。但是在默认情况下，这个定时任务又是不刷盘的（刷盘策略都不满足），kafka把刷盘的时机交给操作系统来掌控。

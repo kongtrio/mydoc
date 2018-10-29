@@ -3,6 +3,12 @@
 ## 一、LogManager结构
 ![](http://on-img.com/chart_image/5b717077e4b067df5a071754.png?_=1534417180862)
 
+**logDir**：表示用户配置的日志存放路径，通过log.dir配置，可以配置多个。LogManager会维护一个LogDir的列表。
+
+**Log:** 每个partition的日志目录，代表topic的一个分区副本。LogManager会维护本broker上所有的Log对象。
+
+**LogSegment：**partition中的日志段对象，每个Log都会有N个日志段。这个日志段包括了日志文件和对应的索引文件。
+
 ## 二、LogManager的创建
 
 LogManager，即日志管理组件，在kafka启动时会创建并启动。
@@ -43,7 +49,7 @@ LogManager创建后，会先后做两件事
 1. 检查日志目录
 2. 加载日志目录的文件
 
-##### 检查日志目录
+### 检查日志目录
 
 ```scala
   private def createAndValidateLogDirs(dirs: Seq[File]) {
@@ -66,7 +72,7 @@ LogManager创建后，会先后做两件事
 2. 日志目录不存在的话就新建一个日志目录
 3. 检查日志目录是否可读
 
-##### 加载日志目录的文件
+### 加载日志目录的文件
 
 ```scala
  private def loadLogs(): Unit = {
@@ -230,7 +236,7 @@ Kafka对于旧日志段的处理方式有两种
 
 Kafka删除的检查策略有两种。一种根据时间过期的策略删除过期的日志，一种是根据日志大小来删除太大的日志。
 
-##### 根据时间策略删除相关日志  
+### 根据时间策略删除相关日志  
 
 该策略和配置`retention.ms`有关系
 
@@ -267,7 +273,7 @@ private def deleteOldSegments(predicate: LogSegment => Boolean): Int = {
 2. 如果扫描完发现全部的日志段都过期了，就要马上新生成一个新的日志段来处理后面的消息
 3. 日志段的删除时异步的，此处只会标记一下，往日志段文件后面加上`.delete`后缀，然后开启一个定时任务删除文件。定时任务的延迟时间和`file.delete.delay.ms`有关系。
 
-##### 根据日志大小删除相关日志
+### 根据日志大小删除相关日志
 
 该删除策略和配置`retention.bytes`有关系。该策略可以保证分区目录的大小始终保持在一个限制的范围内。
 
@@ -341,7 +347,12 @@ kafka在处理Producer请求时，只是将日志写到缓存，并没有执行f
 
 另外，这个刷盘任务这是控制指定时间刷盘一次。kafka还有一个关于刷盘的策略是根据日志的条数来控制刷盘频率的，也就是配置`flush.messages`。这个配置是在每次写日志完检查的，当kafka处理Producer请求写日志到缓存后，会检查当前的offset和之前记录的offset直接的差值，如果超过配置的值，就执行一次刷盘。不过`flush.messages`的默认值也是Long的最大值。
 
-## 六、检查点任务
+## 六、日志恢复检查点任务
+
+kafka的recovery-checkpoint（检查点）记录了最后一次刷新的offset，表示多少日志已经落盘到磁盘上，然后在异常关闭后恢复日志。
+
+### 任务执行的方法 
+
 
 ```scala
   def checkpointRecoveryPointOffsets() {
@@ -356,26 +367,54 @@ kafka在处理Producer请求时，只是将日志写到缓存，并没有执行f
   }
 ```
 
-首先，恢复点是异常关闭时用来恢复数据的。如果数据目录下有`.kafka_cleanshutdown`文件就表示不是异常关闭，就用不上恢复点了。
+这个任务做的事情很简单，就是遍历所有的LogDir，然后将内存中维护的recovery-checkpoint写到文件上。
+
+### offset-checkpoint的存储
+
+每个LogDir日志目录下，都会有一个文件recovery-point-offset-checkpoint，存放了各个Log(Partiton)当前的checkpoint是多少:
+
+```
+0
+54
+__consumer_offsets 22 0
+__consumer_offsets 30 0
+__consumer_offsets 8 0
+__consumer_offsets 21 0
+...
+```
+
+第一行的数字表示当前版本，第二行的数字表示该LogDir目录下有多少个partition目录。接着就是`topic partition编号 recovery-checkpoint`。
+
+### 何时刷新recovery-checkpoint
+
+kafka会在每次flush的时候更新对应Log的recovery-checkpoint。但是由于kafka的定时flush默认是交给操作系统来执行的。所以只有在新建一个新的segment时，以及对partition进行truncat时（如果replica的offset比leader还大，replica就要执行一次truncate，把超出的那些offset砍掉），才会更新recovery-checkpoint。
+
+这种情况就会造成日志落盘了很多，但是recovery-checkpoint一直没更新的情况，不过由于recovery-checkpoint只是用来在broker启动时恢复日志用的，这一点倒无关紧要。另外，在正常关闭broker，kafka会保证将最新的offset写入recovery-checkpoint文件中。
+
+### 如何利用recovery-checkpoint恢复日志
+
+
+首先，恢复点是异常关闭时用来恢复数据的。如果数据目录下有`.kafka_cleanshutdown`文件就表示不是异常关闭，就用不上恢复点了。如果上一次关闭时异常关闭的，kafka就会利用checkpoint来修复日志了。
 
 日志的恢复代码 
 
 ```scala
 //Log.scala  
 private def recoverLog() {
-    // if we have the clean shutdown marker, skip recovery
+    //如果上一次是正常关闭，重新设置一下checkpoint
     if(hasCleanShutdownFile) {
       this.recoveryPoint = activeSegment.nextOffset
       return
     }
 
-    // okay we need to actually recovery this log
+    // 根据recovery-checkpoint 找出那些需要恢复的segment
     val unflushed = logSegments(this.recoveryPoint, Long.MaxValue).iterator
     while(unflushed.hasNext) {
       val curr = unflushed.next
       info("Recovering unflushed segment %d in log %s.".format(curr.baseOffset, name))
       val truncatedBytes =
         try {
+            //调用segment的recover()方法
           curr.recover(config.maxMessageSize)
         } catch {
           case _: InvalidOffsetException =>
@@ -386,14 +425,67 @@ private def recoverLog() {
         }
       if(truncatedBytes > 0) {
         // we had an invalid message, delete all remaining log
+          //只要有一条日志出了问题，就要将这之后的所有segment都删去
         warn("Corruption found in segment %d of log %s, truncating to offset %d.".format(curr.baseOffset, name, curr.nextOffset))
         unflushed.foreach(deleteSegment)
       }
     }
   }
+
+//LogSegment.scala
+//检查segment中的消息是否合法
+  def recover(maxMessageSize: Int): Int = {
+    index.truncate()
+    index.resize(index.maxIndexSize)
+    timeIndex.truncate()
+    timeIndex.resize(timeIndex.maxIndexSize)
+    var validBytes = 0
+    var lastIndexEntry = 0
+    maxTimestampSoFar = Record.NO_TIMESTAMP
+    try {
+        //遍历所有的shallow message
+        //这里shallow message并不一定是我们理解的一条消息，kafka可能会将多条消息压缩成一条消息
+        //所以shallow message可能是一条消息，也可能是多条消息组装成一条消息
+      for (entry <- log.shallowEntries(maxMessageSize).asScala) {
+        val record = entry.record
+        record.ensureValid()
+
+        // The max timestamp should have been put in the outer message, so we don't need to iterate over the inner messages.
+        if (record.timestamp > maxTimestampSoFar) {
+          maxTimestampSoFar = record.timestamp
+          offsetOfMaxTimestamp = entry.offset
+        }
+
+        // Build offset index
+        if(validBytes - lastIndexEntry > indexIntervalBytes) {
+          val startOffset = entry.firstOffset
+          index.append(startOffset, validBytes)
+          timeIndex.maybeAppend(maxTimestampSoFar, offsetOfMaxTimestamp)
+          lastIndexEntry = validBytes
+        }
+        validBytes += entry.sizeInBytes()
+      }
+    } catch {
+      case e: CorruptRecordException =>
+        logger.warn("Found invalid messages in log segment %s at byte offset %d: %s."
+          .format(log.file.getAbsolutePath, validBytes, e.getMessage))
+    }
+    val truncated = log.sizeInBytes - validBytes
+    log.truncateTo(validBytes)
+    index.trimToValidSize()
+    // A normally closed segment always appends the biggest timestamp ever seen into log segment, we do this as well.
+    timeIndex.maybeAppend(maxTimestampSoFar, offsetOfMaxTimestamp, skipFullCheck = true)
+    timeIndex.trimToValidSize()
+    truncated
+  }
 ```
 
+上面代码中的recoverLog()是kafka在启动LogManager初试化一个个Log对象时，Log在初试化过程中会执行的一个方法。这个方法主要做了几件事
 
+1. 通过检查是否有.kafka_cleanshutdown文件来判断上一次是否是正常关闭，如果是的话，就不用恢复什么了，直接更新recovery-checkpoint。
+2. 如果上次是非正常关闭，通过当前的recovery-checkpoint找出这个recovery-checkpoint之后的所有segment(包括recovery-checkpoint所在的segment)。然后遍历这些segment，一条一条消息检查过去，并重建索引，之后如果有segment的消息格式不正确，就执行异步删除操作，将后面的segment全部删除掉。
+
+**要注意的是，这些检查的segment中，只要有一条消息时invalid，kafka就会删除所有检查的segment。**这点是我一直想不通的地方，直到2.0版本也是这样的逻辑，希望有知道原因的朋友告知一下。
 
 ## 七、分区目录删除任务
 
@@ -521,6 +613,4 @@ private def recoverLog() {
 从`nextLogDir()`代码中可以看出，当新建一个新的partition目录时，主要还是取partition文件最少的那个数据目录。
 
 这样在极端情况下可能会有一些问题，可能两个数据目录底下的partition文件数一样，但是其中一个数据目录数据量非常大的情况（各个partition的数据量不一样）。因此，在选择多磁盘时也要注意一下，避免造成资源浪费。
-
-## 九、日志清理机制   
 

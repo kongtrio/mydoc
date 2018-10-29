@@ -1,4 +1,16 @@
-## 一、ReplicaManager的创建和启动  
+[TOC]
+
+## 一、ReplicaManager简介 
+
+replicaManager主要用来管理topic在本broker上的副本信息。并且读写日志的请求都是通过replicaManager进行处理的。
+
+每个replicaManager实例都会持有一个Pool[TopicPartition, Partition]类型的**allPartitions**变量。Pool其实就是一个Map的封装。通过key(TopicPartition)我们可以知道这个partition的编号,以及他对应的partiton信息。
+
+接着parition信息中有持有该partiton的各个Replica的信息，通过获取到本broker上的Replica，可以间接获取到Replica对应的Log对象实例，然后用Log对象实例来处理日志相关的读写操作。
+
+![](http://on-img.com/chart_image/5bab92fce4b0d4d65c1787ef.png?_=1537972476376)
+
+## 二、ReplicaManager的创建和启动  
 
 在kafka启动中，在kafkaServer中会初始化ReplicaManager并启动。
 
@@ -20,11 +32,11 @@ def startup() {
 
 启动的时候开启两个定时任务，`isr-expiration`和`isr-change-propagation`。
 
-`isr-expiration`是`config.replicaLagTimeMaxMs / 2`执行一次.replicaLagTimeMaxMs的默认值是10000，也就是默认5s执行一次该任务。
+`isr-expiration`任务用于管理副本ISR的过期，`config.replicaLagTimeMaxMs / 2`执行一次.replicaLagTimeMaxMs的默认值是10000，也就是默认5s执行一次该任务。
 
-`isr-change-propagation`是2.5s执行一次。
+`isr-change-propagation`用于向其他的broker传播ISR的变动消息，是2.5s执行一次。
 
-## 二、ReplicaManager管理的两个定时任务  
+## 三、ReplicaManager管理的两个定时任务  
 
 ### 1、ISR过期管理任务
 
@@ -71,6 +83,7 @@ ISR过期管理任务主要负责将那些已经过期的replica移出ISR列表�
 - 更新ISR后会修改zk那边的配置
 - ISR变动会kafka还会尝试推进HW的值，HW的推进规则后面会介绍
 - 在更新ISR时，还会将要更新的partition放到`isrChangeSet`集合中去，同时更新`lastIsrChangeMs`时间，后面ISR变更通知任务会使用到。
+- 这个任务只会移除过期的ISR，不会去尝试新增副本到ISR中。
 
 ### 2、ISR变更通知任务  
 
@@ -96,9 +109,30 @@ ISR变动时，为了让其他的broker能收到ISR变动的通知，会往zk的
 
 从代码看，这个任务做的事情也很简单，就是将前面`isr-expiration`产生变动ISR的partition发送到zk的`/isr_change_notification`节点中。
 
-为了避免太过频繁的去发送变更通知，这里设置了两个频率常量(数值是写死的，和kafka的配置无关)，这样可以让各个partition的ISR变动通知尽量批量发送，提供吞吐量。
+为了避免太过频繁的去发送变更通知，这里设置了两个频率常量(数值是写死的，和kafka的配置无关)，这样可以让各个partition的ISR变动通知尽量批量发送，提高吞吐量。
 
-## 三、副本复制数据   
+## 四、ReplicaManager处理的请求类型
+
+replicaManager会用来处理以下6种请求:
+
+1. LeaderAndIsr 请求
+2. StopReplica 请求
+3. UpdateMetadata 请求
+4. Produce 请求
+5. Fetch 请求
+6. ListOffset 请求
+
+LeaderAndIsr 是controller发送过来，说明replica是不是leader或者是不是ISR的请求，下面一节会讲。
+
+StopReplica 请求主要用来关闭某个副本,副本被关闭后，就会被删除。后面的文章中会详细介绍。
+
+UpdateMetadata 请求用来更新元数据。
+
+Produce 请求和Fetch 请求也就是我们耳熟能详的读写请求。Produce 请求可以看我之前的文章,Fetch 请求的处理我也会在在后面的文章中介绍。
+
+最后ListOffset 请求主要获取各个partiton的offset信息。后面的文章中会详细介绍。
+
+## 五、副本复制数据   
 
 kafka的broker启动后，并不会知道自己存储的那些分区是leader还是follow，因此broker启动后并不会马上开启消息的复制。
 
@@ -182,9 +216,9 @@ leader处理完fetch请求后，如果发现请求客户端是follow所在的bro
 
 首先，leader会维护一个`assignedReplicaMap`，保存该partition下所有的Replica。这些Replica下都有具体的一些信息，比如LEO、_lastCaughtUpTimeMs、lastFetchTimeMs等信息。
 
-当leader处理完来自follow的fetch请求后，会更新对应Replica对象的_lastCaughtUpTimeMs，然后查看是否要把此Replica加进ISR中(可能之前这个replica没在ISR中)，最后尝试推进HW。
+当leader处理完来自follow的fetch请求后，会更新对应Replica对象的_lastCaughtUpTimeMs，然后判断是否要把此Replica加进ISR中(可能之前这个replica没在ISR中)，最后尝试推进HW。
 
-### leader推进HW
+### leader如何推进HW
 
 在以下场景时，leader会尝试推进HW
 
@@ -214,4 +248,4 @@ HW的更新规则
   }
 ```
 
-HW的更新规则很简单，就是找ISR以及最后一次更新时间小于replicaLagTimeMaxMs的replica的LEO，然后取其中最小的那个LEO。要注意的是，这里要加上那些以及满足加入ISR条件但是还未加入ISR的replica。
+HW的更新规则很简单，就是找**ISR以及最后一次更新时间小于replicaLagTimeMaxMs的replica的LEO**，然后取其中最小的那个LEO。要注意的是，这里要加上那些已经满足加入ISR条件但是还未加入ISR的replica。
